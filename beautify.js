@@ -1,19 +1,34 @@
-const readline = require('readline');
-const chalk = require('chalk');
+import chalk from 'chalk';
+import boxen from 'boxen';
 
-// Create a simple input/output interface for the terminal
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
+process.stdin.setEncoding('utf8');
+
+let data = '';
+
+process.stdin.on('data', chunk => {
+    data += chunk;
 });
 
-// Function to beautify text (you can expand this as needed)
-function beautifyText(input) {
-    return chalk.green(input) // Example: applying color formatting using chalk
-        .replace(/\n/g, '\n\n');  // Just a simple beautifier for example purposes
-}
+process.stdin.on('end', () => {
+    // Clean up \n and formatting
+    const output = data
+        .replace(/\\n/g, '\n')  // unescape \n
+        .replace(/\\t/g, '\t')  // unescape \t
+        .replace(/\\"/g, '"')   // unescape quotes
+        .replace(/^"|"$/g, ''); // remove wrapping quotes if any
 
-// Read input, beautify it, and display it
-rl.on('line', (input) => {
-    console.log(beautifyText(input));
+    // Try to parse and pretty-print JSON
+    let prettyOutput = output;
+    try {
+        const parsed = JSON.parse(output);
+        prettyOutput = JSON.stringify(parsed, null, 2);
+    } catch { }
+
+    console.log(
+        boxen(chalk.green(prettyOutput), {
+            padding: 1,
+            borderStyle: 'round',
+            borderColor: 'cyan',
+        })
+    );
 });
